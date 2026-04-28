@@ -53,13 +53,43 @@ function CheckItem({ label, desc, checked, onClick }: { label: string; desc: str
 const AUDIENCE = ['Beginners','Intermediate','Advanced','55+ / Bungee GOLD','Wellness / Recovery','Teachers & Trainers','Everyone']
 
 const ALL_CLASSES = [
-  'Aerial Silks — Intro','Aerial Silks — Beginner','Aerial Silks — Intermediate','Aerial Silks — Advanced',
-  'Aerial Sling & Hammock — Intro','Aerial Sling & Hammock — Beginner','Aerial Sling & Hammock — Intermediate','Aerial Sling & Hammock — Advanced',
-  'Lyra / Hoop — Intro','Lyra / Hoop — Beginner','Lyra / Hoop — Intermediate','Lyra / Hoop — Advanced',
-  'Bungee Fitness','Bungee GOLD (55+)',
-  'Slow Flow / Restorative','Sound Bath / Aerial Nap',
-  'Strength & Stretch','Cardio Drumming','Hula Hoop Fitness','Dance Fitness',
-  'Under 18 Classes','Teacher Training / Certification',
+  // Bungee
+  'Bungee Intro',
+  'Bungee Intermediate',
+  'Bungee Mixed Levels',
+  // Aerial Sling
+  'Aerial Sling — Intro / Beginner',
+  'Aerial Sling — Intermediate',
+  'Aerial Sling — Advanced',
+  // Aerial Hammock
+  'Aerial Hammock — Intro / Beginner',
+  'Aerial Hammock — Intermediate',
+  'Aerial Hammock — Advanced',
+  // Aerial Silks
+  'Aerial Silks Intro / Beginner',
+  'Aerial Silks A — Intermediate Lv 2.5–2.9',
+  // Aerial Mixed / Combo
+  'Aerial Lv 2+ Conditioning Flips & Skills — Intermediate Hammock/Sling',
+  'Aerial Lv 3.1–3.5 Mixed Apparatus Adv — Instructor Permission',
+  'Aerial Conditioning & Fly Hammock — Lv 1/2 Mixed Levels',
+  'Aerial Lv 2 Combo Hoop & Hammock/Sling — Beg / Intermediate',
+  'Aerial Lv 2 Beg. Intermediate Hammock / Sling',
+  'Aerial Lv 2.5 Intermediate Hammock / Sling',
+  'Aerial LOW Hammock Intermediate Mixed Lv 2+',
+  // Lyra
+  'Lyra 1–1+ Beginner',
+  'Lyra 2 Intermediate',
+  'Lyra 3 Adv. & Mixed Apparatus',
+  // Other
+  'Floor Yin / Restorative — All Levels',
+  'Bungee GOLD (55+)',
+  'Sound Bath / Aerial Nap',
+  'Strength & Stretch',
+  'Cardio Drumming',
+  'Hula Hoop Fitness',
+  'Dance Fitness',
+  'Under 18 Classes',
+  'Teacher Training / Certification',
 ]
 
 const APPROVALS = [
