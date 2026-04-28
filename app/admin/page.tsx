@@ -4,9 +4,11 @@ import { useState } from 'react'
 const B = '#7e4070', BD = '#5c2e52', BL = '#f5eaf4', BB = '#e2cde0', MUT = '#6b5c68', SUB = '#f8f4f8'
 
 const ALL_CLASSES = [
-  '','Aerial Silks — Intro','Aerial Silks — Beginner','Aerial Silks — Level 2/3',
-  'Lyra / Hoop — Intro','Lyra / Hoop — Beginner','Aerial Hammock / Sling',
-  'Bungee Fitness','Bungee GOLD (55+)','Slow Flow / Restorative','Sound Bath / Aerial Nap',
+  '','Aerial Silks — Intro','Aerial Silks — Beginner','Aerial Silks — Intermediate','Aerial Silks — Advanced',
+  'Aerial Sling & Hammock — Intro','Aerial Sling & Hammock — Beginner','Aerial Sling & Hammock — Intermediate','Aerial Sling & Hammock — Advanced',
+  'Lyra / Hoop — Intro','Lyra / Hoop — Beginner','Lyra / Hoop — Intermediate','Lyra / Hoop — Advanced',
+  'Bungee Fitness','Bungee GOLD (55+)',
+  'Slow Flow / Restorative','Sound Bath / Aerial Nap',
   'Strength & Stretch','Cardio Drumming','Hula Hoop Fitness','Dance Fitness',
   'Under 18 Classes','Teacher Training / Certification',
 ]
