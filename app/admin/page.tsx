@@ -3,29 +3,39 @@ import { useState } from 'react'
 
 const B = '#7e4070', BD = '#5c2e52', BL = '#f5eaf4', BB = '#e2cde0', MUT = '#6b5c68', SUB = '#f8f4f8'
 
-const FIELDS: [string, string][] = [
-  ['month','Month & Year'],
-  ['submitted_date','Date Submitted'],
-  ['news','Big News This Month'],
-  ['promo','Promotions / Offers'],
-  ['topic','Aerialosophy Topic'],
-  ['tip','The Tip'],
-  ['audience','Audience'],
-  ['story','Student Story / Example'],
-  ['quote','Quote Card'],
-  ['aerialophy_note','Notes for Blog Expansion'],
-  ['week1_class','Week 1 Class Spotlight'],
-  ['week2_class','Week 2 Class Spotlight'],
-  ['week3_class','Week 3 Class Spotlight'],
-  ['week4_class','Week 4 Class Spotlight'],
-  ['class_notes','Class Spotlight Notes'],
-  ['student_of_month','Student of the Month'],
-  ['teacher_of_month','Teacher of the Month'],
-  ['approvals','Approvals Checked'],
-  ['notes','Open Notes'],
+const ALL_CLASSES = [
+  '','Aerial Silks — Intro','Aerial Silks — Beginner','Aerial Silks — Level 2/3',
+  'Lyra / Hoop — Intro','Lyra / Hoop — Beginner','Aerial Hammock / Sling',
+  'Bungee Fitness','Bungee GOLD (55+)','Slow Flow / Restorative','Sound Bath / Aerial Nap',
+  'Strength & Stretch','Cardio Drumming','Hula Hoop Fitness','Dance Fitness',
+  'Under 18 Classes','Teacher Training / Certification',
 ]
 
-const WIDE_FIELDS = ['tip','story','notes','aerialophy_note','class_notes']
+const FIELDS: [string, string, 'text'|'textarea'|'select'][] = [
+  ['month','Month & Year','text'],
+  ['submitted_date','Date Submitted','text'],
+  ['news','Big News This Month','textarea'],
+  ['promo','Promotions / Offers','textarea'],
+  ['topic','Aerialsophy Topic','text'],
+  ['tip','The Tip','textarea'],
+  ['audience','Audience','text'],
+  ['story','Student Story / Example','textarea'],
+  ['quote','Quote Card','text'],
+  ['aerialsophy_note','Notes for Blog Expansion','textarea'],
+  ['week1_class','Week 1 Class Spotlight','select'],
+  ['week2_class','Week 2 Class Spotlight','select'],
+  ['week3_class','Week 3 Class Spotlight','select'],
+  ['week4_class','Week 4 Class Spotlight','select'],
+  ['class_notes','Class Spotlight Notes','textarea'],
+  ['student_of_month','Student of the Month','text'],
+  ['teacher_of_month','Teacher of the Month','text'],
+  ['approvals','Approvals Checked','text'],
+  ['notes','Open Notes','textarea'],
+]
+
+const WIDE = ['tip','story','notes','aerialsophy_note','class_notes','promo','news']
+
+type Row = Record<string, string>
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false)
@@ -33,9 +43,13 @@ export default function AdminPage() {
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState('')
   const [user, setUser] = useState<{name:string}>()
-  const [responses, setResponses] = useState<Record<string,string>[]>([])
+  const [responses, setResponses] = useState<Row[]>([])
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState<number|null>(null)
+  const [editingId, setEditingId] = useState<number|null>(null)
+  const [editData, setEditData] = useState<Row>({})
+  const [saving, setSaving] = useState(false)
+  const [saveMsg, setSaveMsg] = useState('')
 
   const login = async () => {
     setLoginError('')
@@ -58,7 +72,36 @@ export default function AdminPage() {
     setLoading(false)
   }
 
-  const inp: React.CSSProperties = { width: '100%', fontFamily: "'Montserrat',sans-serif", fontSize: '14px', color: '#1a1020', background: SUB, border: `1.5px solid ${BB}`, borderRadius: '8px', padding: '11px 15px', outline: 'none', marginBottom: '14px' }
+  const startEdit = (r: Row) => {
+    setEditingId(Number(r.id))
+    setEditData({ ...r })
+    setSaveMsg('')
+  }
+
+  const cancelEdit = () => { setEditingId(null); setEditData({}); setSaveMsg('') }
+
+  const saveEdit = async () => {
+    setSaving(true); setSaveMsg('')
+    try {
+      const res = await fetch('/api/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editData)
+      })
+      if (!res.ok) throw new Error()
+      setResponses(prev => prev.map(r => r.id === editData.id ? { ...editData } : r))
+      setEditingId(null); setEditData({})
+      setSaveMsg('saved')
+    } catch { setSaveMsg('error') }
+    setSaving(false)
+  }
+
+  const upd = (k: string) => (e: React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement>) =>
+    setEditData(prev => ({ ...prev, [k]: e.target.value }))
+
+  const inp: React.CSSProperties = { width: '100%', fontFamily: "'Montserrat',sans-serif", fontSize: '13px', color: '#1a1020', background: '#fff', border: `1.5px solid ${B}`, borderRadius: '7px', padding: '9px 13px', outline: 'none', marginBottom: '0' }
+  const ta: React.CSSProperties = { ...inp, resize: 'vertical' as const, minHeight: '80px', lineHeight: 1.6 }
+  const loginInp: React.CSSProperties = { width: '100%', fontFamily: "'Montserrat',sans-serif", fontSize: '14px', color: '#1a1020', background: SUB, border: `1.5px solid ${BB}`, borderRadius: '8px', padding: '11px 15px', outline: 'none', marginBottom: '14px' }
 
   if (!authed) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: SUB, padding: '20px' }}>
@@ -66,12 +109,12 @@ export default function AdminPage() {
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ fontFamily: "'Playfair Display',serif", fontSize: '11px', letterSpacing: '3px', textTransform: 'uppercase', color: '#c49abe', marginBottom: '10px' }}>Admin Access</div>
           <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: '30px', color: BD }}>Content <em style={{fontStyle:'italic',color:B}}>Hub</em></h1>
-          <p style={{ fontSize: '13px', color: MUT, marginTop: '8px', lineHeight: 1.5 }}>Sign in to view Zina&apos;s monthly responses</p>
+          <p style={{ fontSize: '13px', color: MUT, marginTop: '8px', lineHeight: 1.5 }}>Sign in to view and edit Zina&apos;s monthly responses</p>
         </div>
         <label style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' as const, color: B, display: 'block', marginBottom: '5px' }}>Username</label>
-        <input style={inp} value={username} onChange={e=>setUsername(e.target.value)} placeholder="elena or zina" onKeyDown={e=>e.key==='Enter'&&login()} />
+        <input style={loginInp} value={username} onChange={e=>setUsername(e.target.value)} placeholder="elena or zina" onKeyDown={e=>e.key==='Enter'&&login()} />
         <label style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' as const, color: B, display: 'block', marginBottom: '5px' }}>Password</label>
-        <input type="password" style={inp} value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==='Enter'&&login()} />
+        <input type="password" style={loginInp} value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==='Enter'&&login()} />
         {loginError && <p style={{ fontSize: '13px', color: '#a33', marginBottom: '12px' }}>{loginError}</p>}
         <button onClick={login} style={{ width: '100%', background: B, color: '#fff', border: 'none', borderRadius: '8px', padding: '13px', fontFamily: "'Montserrat',sans-serif", fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>Sign In</button>
       </div>
@@ -96,7 +139,7 @@ export default function AdminPage() {
         <div style={{marginBottom:'32px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'12px'}}>
           <div>
             <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:'28px',color:BD,marginBottom:'6px'}}>Monthly <em style={{fontStyle:'italic',color:B}}>Responses</em></h2>
-            <p style={{fontSize:'13px',color:MUT}}>All of Zina&apos;s submitted content forms, newest first.</p>
+            <p style={{fontSize:'13px',color:MUT}}>View and edit Zina&apos;s monthly content submissions.</p>
           </div>
           <div style={{background:BL,border:`1px solid ${BB}`,borderRadius:'20px',padding:'6px 16px',fontSize:'12px',fontWeight:600,color:BD}}>
             {responses.length} {responses.length === 1 ? 'entry' : 'entries'}
@@ -112,71 +155,130 @@ export default function AdminPage() {
           </div>
         )}
 
-        {responses.map((r, i) => (
-          <div key={r.id} style={{background:'#fff',borderRadius:'12px',border:`1px solid ${BB}`,marginBottom:'16px',overflow:'hidden'}}>
-            <div onClick={()=>setOpen(open===i?null:i)} style={{background:open===i?BD:BL,padding:'18px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',transition:'background 0.2s'}}>
-              <div>
-                <div style={{fontFamily:"'Playfair Display',serif",fontSize:'20px',fontWeight:700,color:open===i?'#fff':BD}}>{r.month || 'Untitled'}</div>
-                <div style={{fontSize:'11px',color:open===i?'rgba(255,255,255,0.6)':MUT,marginTop:'3px'}}>
-                  Submitted: {r.created_at ? new Date(r.created_at).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) : '—'}
+        {responses.map((r, i) => {
+          const isEditing = editingId === Number(r.id)
+          const isOpen = open === i
+
+          return (
+            <div key={r.id} style={{background:'#fff',borderRadius:'12px',border:`1.5px solid ${isEditing ? B : BB}`,marginBottom:'16px',overflow:'hidden',transition:'border-color 0.2s'}}>
+
+              {/* Card header */}
+              <div style={{background:isEditing ? B : isOpen ? BD : BL, padding:'16px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',transition:'background 0.2s'}}>
+                <div style={{cursor:'pointer',flex:1}} onClick={()=>!isEditing&&setOpen(isOpen?null:i)}>
+                  <div style={{fontFamily:"'Playfair Display',serif",fontSize:'20px',fontWeight:700,color:isEditing||isOpen?'#fff':BD}}>{r.month || 'Untitled'}</div>
+                  <div style={{fontSize:'11px',color:(isEditing||isOpen)?'rgba(255,255,255,0.6)':MUT,marginTop:'3px'}}>
+                    Submitted: {r.created_at ? new Date(r.created_at).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) : '—'}
+                    {isEditing && <span style={{marginLeft:'10px',background:'rgba(255,255,255,0.2)',borderRadius:'10px',padding:'2px 10px',fontSize:'11px'}}>✏️ Editing</span>}
+                  </div>
+                </div>
+                <div style={{display:'flex',gap:'8px',flexShrink:0}}>
+                  {!isEditing ? (
+                    <>
+                      <button onClick={()=>{setOpen(isOpen?null:i)}} style={{background:'rgba(255,255,255,0.15)',border:'1px solid rgba(255,255,255,0.3)',color:'#fff',borderRadius:'6px',padding:'6px 14px',fontFamily:"'Montserrat',sans-serif",fontSize:'12px',fontWeight:600,cursor:'pointer'}}>
+                        {isOpen ? '▲ Close' : '▼ View'}
+                      </button>
+                      <button onClick={()=>{startEdit(r);setOpen(i)}} style={{background:'#fff',border:'none',color:BD,borderRadius:'6px',padding:'6px 14px',fontFamily:"'Montserrat',sans-serif",fontSize:'12px',fontWeight:700,cursor:'pointer'}}>
+                        ✏️ Edit
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={cancelEdit} style={{background:'rgba(255,255,255,0.15)',border:'1px solid rgba(255,255,255,0.3)',color:'#fff',borderRadius:'6px',padding:'6px 14px',fontFamily:"'Montserrat',sans-serif",fontSize:'12px',fontWeight:600,cursor:'pointer'}}>
+                        Cancel
+                      </button>
+                      <button onClick={saveEdit} disabled={saving} style={{background:'#fff',border:'none',color:BD,borderRadius:'6px',padding:'6px 18px',fontFamily:"'Montserrat',sans-serif",fontSize:'12px',fontWeight:700,cursor:'pointer',opacity:saving?0.7:1}}>
+                        {saving ? 'Saving...' : '✓ Save Changes'}
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
-              <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
-                {r.topic && (
-                  <span style={{fontSize:'11px',background:open===i?'rgba(255,255,255,0.15)':BL,border:`1px solid ${open===i?'rgba(255,255,255,0.2)':BB}`,borderRadius:'20px',padding:'4px 12px',color:open===i?'#fff':BD,fontWeight:600,maxWidth:'260px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                    {r.topic}
-                  </span>
-                )}
-                <span style={{fontSize:'12px',color:open===i?'rgba(255,255,255,0.8)':MUT}}>{open===i?'▲':'▼'}</span>
-              </div>
-            </div>
 
-            {open === i && (
-              <div style={{padding:'24px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px'}}>
+              {/* Save feedback */}
+              {saveMsg === 'saved' && !isEditing && i === open && (
+                <div style={{background:'#eaf5f0',borderBottom:`1px solid #b2dfce`,padding:'10px 24px',fontSize:'13px',color:'#2e7d5e',fontWeight:600}}>✅ Changes saved successfully!</div>
+              )}
+              {saveMsg === 'error' && isEditing && (
+                <div style={{background:'#fdf0f0',borderBottom:`1px solid #f5c0c0`,padding:'10px 24px',fontSize:'13px',color:'#a33',fontWeight:600}}>⚠️ Something went wrong. Please try again.</div>
+              )}
 
-                {/* Class spotlight summary banner */}
-                {(r.week1_class || r.week2_class || r.week3_class || r.week4_class) && (
-                  <div style={{gridColumn:'1 / -1',background:BL,border:`1px solid ${BB}`,borderRadius:'10px',padding:'16px 20px'}}>
-                    <div style={{fontSize:'10px',fontWeight:700,letterSpacing:'1px',textTransform:'uppercase',color:B,marginBottom:'12px'}}>Class Spotlight Schedule</div>
-                    <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'10px'}}>
-                      {[['Week 1',r.week1_class],['Week 2',r.week2_class],['Week 3',r.week3_class],['Week 4',r.week4_class]].map(([wk,cls])=>(
-                        <div key={wk} style={{background:'#fff',borderRadius:'8px',border:`1px solid ${BB}`,padding:'10px 12px'}}>
-                          <div style={{fontSize:'10px',fontWeight:700,color:MUT,letterSpacing:'0.5px',marginBottom:'4px'}}>{wk}</div>
-                          <div style={{fontSize:'12px',fontWeight:600,color:cls?BD:MUT,lineHeight:1.4}}>{cls||'—'}</div>
-                        </div>
-                      ))}
+              {/* Card body — view or edit */}
+              {(isOpen || isEditing) && (
+                <div style={{padding:'24px'}}>
+
+                  {/* Class spotlight — always shown as summary */}
+                  {(isEditing ? editData : r).week1_class || (isEditing ? editData : r).week2_class ? (
+                    <div style={{background:BL,border:`1px solid ${BB}`,borderRadius:'10px',padding:'16px 20px',marginBottom:'20px'}}>
+                      <div style={{fontSize:'10px',fontWeight:700,letterSpacing:'1px',textTransform:'uppercase',color:B,marginBottom:'12px'}}>Class Spotlight Schedule</div>
+                      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'10px'}}>
+                        {(['week1_class','week2_class','week3_class','week4_class'] as const).map((k,wi)=>(
+                          <div key={k} style={{background:'#fff',borderRadius:'8px',border:`1px solid ${BB}`,padding:'10px 12px'}}>
+                            <div style={{fontSize:'10px',fontWeight:700,color:MUT,marginBottom:'4px'}}>Week {wi+1}</div>
+                            {isEditing ? (
+                              <select value={editData[k]||''} onChange={upd(k)} style={{width:'100%',fontFamily:"'Montserrat',sans-serif",fontSize:'12px',color:'#1a1020',background:SUB,border:`1px solid ${BB}`,borderRadius:'5px',padding:'5px 8px',outline:'none'}}>
+                                {ALL_CLASSES.map(c=><option key={c} value={c}>{c||'— Select —'}</option>)}
+                              </select>
+                            ) : (
+                              <div style={{fontSize:'12px',fontWeight:600,color:(isEditing?editData:r)[k]?BD:MUT,lineHeight:1.4}}>{(isEditing?editData:r)[k]||'—'}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  ) : null}
 
-                {/* Student & Teacher */}
-                {(r.student_of_month || r.teacher_of_month) && (
-                  <div style={{gridColumn:'1 / -1',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
-                    {[['Student of the Month', r.student_of_month,'🌟'],['Teacher of the Month', r.teacher_of_month,'👩‍🏫']].map(([label,val,icon])=>(
-                      val ? <div key={label} style={{background:'#fff8ff',border:`1px solid ${BB}`,borderRadius:'8px',padding:'12px 16px',display:'flex',alignItems:'center',gap:'10px'}}>
-                        <span style={{fontSize:'20px'}}>{icon}</span>
-                        <div>
-                          <div style={{fontSize:'10px',fontWeight:700,letterSpacing:'1px',textTransform:'uppercase',color:B,marginBottom:'3px'}}>{label}</div>
-                          <div style={{fontSize:'14px',fontWeight:600,color:BD}}>{val}</div>
-                        </div>
-                      </div> : null
+                  {/* Student & Teacher */}
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px',marginBottom:'20px'}}>
+                    {(['student_of_month','teacher_of_month'] as const).map((k,ki)=>(
+                      <div key={k} style={{background:'#fff8ff',border:`1px solid ${BB}`,borderRadius:'8px',padding:'12px 16px'}}>
+                        <div style={{fontSize:'10px',fontWeight:700,letterSpacing:'1px',textTransform:'uppercase',color:B,marginBottom:'6px'}}>{ki===0?'Student of the Month':'Teacher of the Month'}</div>
+                        {isEditing ? (
+                          <input value={editData[k]||''} onChange={upd(k)} style={{...inp,marginBottom:0}} placeholder={ki===0?'e.g. Sandra':'e.g. Coach Maria'} />
+                        ) : (
+                          <div style={{fontSize:'14px',fontWeight:600,color:(isEditing?editData:r)[k]?BD:MUT}}>{(isEditing?editData:r)[k]||'—'}</div>
+                        )}
+                      </div>
                     ))}
                   </div>
-                )}
 
-                {/* All other fields */}
-                {FIELDS.filter(([key]) => !['week1_class','week2_class','week3_class','week4_class','student_of_month','teacher_of_month'].includes(key)).map(([key, label]) =>
-                  r[key] ? (
-                    <div key={key} style={{gridColumn: WIDE_FIELDS.includes(key) ? '1 / -1' : 'auto'}}>
-                      <div style={{fontSize:'10px',fontWeight:700,letterSpacing:'1px',textTransform:'uppercase',color:B,marginBottom:'5px'}}>{label}</div>
-                      <div style={{fontSize:'13px',color:'#1a1020',lineHeight:1.65,whiteSpace:'pre-wrap',background:SUB,borderRadius:'6px',padding:'10px 14px'}}>{r[key]}</div>
+                  {/* All other fields */}
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px'}}>
+                    {FIELDS.filter(([key])=>!['week1_class','week2_class','week3_class','week4_class','student_of_month','teacher_of_month'].includes(key)).map(([key, label, type])=>{
+                      const val = (isEditing ? editData : r)[key]
+                      if (!isEditing && !val) return null
+                      return (
+                        <div key={key} style={{gridColumn: WIDE.includes(key) ? '1 / -1' : 'auto'}}>
+                          <div style={{fontSize:'10px',fontWeight:700,letterSpacing:'1px',textTransform:'uppercase',color:B,marginBottom:'5px'}}>{label}</div>
+                          {isEditing ? (
+                            type === 'textarea' ? (
+                              <textarea value={editData[key]||''} onChange={upd(key)} style={ta} />
+                            ) : (
+                              <input value={editData[key]||''} onChange={upd(key)} style={{...inp,marginBottom:0}} />
+                            )
+                          ) : (
+                            <div style={{fontSize:'13px',color:'#1a1020',lineHeight:1.65,whiteSpace:'pre-wrap',background:SUB,borderRadius:'6px',padding:'10px 14px'}}>{val}</div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Bottom save button when editing — convenient second save */}
+                  {isEditing && (
+                    <div style={{marginTop:'24px',paddingTop:'20px',borderTop:`1px solid ${BB}`,display:'flex',justifyContent:'flex-end',gap:'10px'}}>
+                      <button onClick={cancelEdit} style={{background:'#fff',border:`1.5px solid ${BB}`,color:MUT,borderRadius:'8px',padding:'10px 22px',fontFamily:"'Montserrat',sans-serif",fontSize:'13px',fontWeight:600,cursor:'pointer'}}>
+                        Cancel
+                      </button>
+                      <button onClick={saveEdit} disabled={saving} style={{background:B,border:'none',color:'#fff',borderRadius:'8px',padding:'10px 28px',fontFamily:"'Montserrat',sans-serif",fontSize:'13px',fontWeight:700,cursor:'pointer',opacity:saving?0.7:1}}>
+                        {saving ? 'Saving...' : '✓ Save Changes'}
+                      </button>
                     </div>
-                  ) : null
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
